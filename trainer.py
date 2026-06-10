@@ -404,8 +404,18 @@ class Trainer:
     @staticmethod
     def _print_metrics(metrics: dict[str, float]) -> None:
         print(
-            "epoch={epoch} train_loss={train_loss:.4f} "
-            "train_acc={train_accuracy:.4f} train_f1={train_f1_macro:.4f} "
-            "val_loss={val_loss:.4f} val_acc={val_accuracy:.4f} "
-            "val_f1={val_f1_macro:.4f} lr={lr:.6g}".format(**metrics)
+            (
+                "epoch={epoch} lr={lr:.6g}\n"
+                "  train: loss={train_loss:.4f} acc={train_accuracy:.4f} "
+                "macro(P/R/F1)={train_precision_macro:.4f}/"
+                "{train_recall_macro:.4f}/{train_f1_macro:.4f} "
+                "weighted(P/R/F1)={train_precision_weighted:.4f}/"
+                "{train_recall_weighted:.4f}/{train_f1_weighted:.4f}\n"
+                "  val:   loss={val_loss:.4f} acc={val_accuracy:.4f} "
+                "macro(P/R/F1)={val_precision_macro:.4f}/"
+                "{val_recall_macro:.4f}/{val_f1_macro:.4f} "
+                "weighted(P/R/F1)={val_precision_weighted:.4f}/"
+                "{val_recall_weighted:.4f}/{val_f1_weighted:.4f}"
+            ).format(**metrics),
+            flush=True,
         )
