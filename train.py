@@ -25,6 +25,7 @@ from dataset import (
 from models import (
     GraphTransformerClassifier,
     LSTMClassifier,
+    RNNClassifier,
     TransformerClassifier,
 )
 from trainer import Trainer
@@ -56,7 +57,7 @@ def parse_args() -> argparse.Namespace:
     model = parser.add_argument_group("model")
     model.add_argument(
         "--model",
-        choices=("lstm", "transformer", "graph_transformer"),
+        choices=("rnn", "lstm", "transformer", "graph_transformer"),
         default="lstm",
     )
     model.add_argument("--hidden-dim", type=int, default=256)
@@ -67,6 +68,11 @@ def parse_args() -> argparse.Namespace:
         "--bidirectional",
         action=argparse.BooleanOptionalAction,
         default=True,
+    )
+    model.add_argument(
+        "--rnn-nonlinearity",
+        choices=("tanh", "relu"),
+        default="tanh",
     )
     model.add_argument("--num-heads", type=int, default=8)
     model.add_argument("--feedforward-dim", type=int, default=1024)
@@ -112,8 +118,8 @@ def prepare_args(args: argparse.Namespace) -> argparse.Namespace:
     args.feature_root = args.feature_root or Path("feature") / args.feature_type
     args.views = resolve_views(args.views)
 
-    if args.model == "lstm" and args.pooling == "cls":
-        raise ValueError("LSTM does not support pooling='cls'")
+    if args.model in {"rnn", "lstm"} and args.pooling == "cls":
+        raise ValueError(f"{args.model} does not support pooling='cls'")
     if args.model in {"transformer", "graph_transformer"} and args.pooling == "last":
         raise ValueError(f"{args.model} does not support pooling='last'")
     if args.model == "graph_transformer" and args.feature_type != "skeleton":
@@ -195,6 +201,12 @@ def build_model(args: argparse.Namespace, input_dim: int, num_classes: int) -> n
         "dropout": args.dropout,
         "pooling": args.pooling,
     }
+    if args.model == "rnn":
+        return RNNClassifier(
+            **common,
+            bidirectional=args.bidirectional,
+            nonlinearity=args.rnn_nonlinearity,
+        )
     if args.model == "lstm":
         return LSTMClassifier(**common, bidirectional=args.bidirectional)
     transformer_args = {
@@ -246,8 +258,10 @@ def build_metadata(
             "patience": args.plateau_patience,
             "min_lr": args.min_lr,
         }
-    if args.model == "lstm":
+    if args.model in {"rnn", "lstm"}:
         metadata["bidirectional"] = args.bidirectional
+    if args.model == "rnn":
+        metadata["nonlinearity"] = args.rnn_nonlinearity
     if args.model in {"transformer", "graph_transformer"}:
         metadata.update(
             num_heads=args.num_heads,
