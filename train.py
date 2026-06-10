@@ -23,7 +23,6 @@ from dataset import (
     validate_labels,
 )
 from models import (
-    GraphTransformerClassifier,
     LSTMClassifier,
     RNNClassifier,
     TransformerClassifier,
@@ -57,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     model = parser.add_argument_group("model")
     model.add_argument(
         "--model",
-        choices=("rnn", "lstm", "transformer", "graph_transformer"),
+        choices=("rnn", "lstm", "transformer"),
         default="lstm",
     )
     model.add_argument("--hidden-dim", type=int, default=256)
@@ -76,7 +75,6 @@ def parse_args() -> argparse.Namespace:
     )
     model.add_argument("--num-heads", type=int, default=8)
     model.add_argument("--feedforward-dim", type=int, default=1024)
-    model.add_argument("--graph-layers", type=int, default=2)
     model.add_argument("--max-len", type=int, default=512)
 
     training = parser.add_argument_group("training")
@@ -120,12 +118,8 @@ def prepare_args(args: argparse.Namespace) -> argparse.Namespace:
 
     if args.model in {"rnn", "lstm"} and args.pooling == "cls":
         raise ValueError(f"{args.model} does not support pooling='cls'")
-    if args.model in {"transformer", "graph_transformer"} and args.pooling == "last":
+    if args.model == "transformer" and args.pooling == "last":
         raise ValueError(f"{args.model} does not support pooling='last'")
-    if args.model == "graph_transformer" and args.feature_type != "skeleton":
-        raise ValueError("Graph Transformer only supports skeleton features")
-    if args.graph_layers < 1:
-        raise ValueError("--graph-layers must be positive")
     if not 0.0 < args.plateau_factor < 1.0:
         raise ValueError("--plateau-factor must be between 0 and 1")
     if args.plateau_patience < 0:
@@ -215,11 +209,6 @@ def build_model(args: argparse.Namespace, input_dim: int, num_classes: int) -> n
         "feedforward_dim": args.feedforward_dim,
         "max_len": args.max_len,
     }
-    if args.model == "graph_transformer":
-        return GraphTransformerClassifier(
-            **transformer_args,
-            graph_layers=args.graph_layers,
-        )
     return TransformerClassifier(
         **transformer_args,
     )
@@ -262,17 +251,11 @@ def build_metadata(
         metadata["bidirectional"] = args.bidirectional
     if args.model == "rnn":
         metadata["nonlinearity"] = args.rnn_nonlinearity
-    if args.model in {"transformer", "graph_transformer"}:
+    if args.model == "transformer":
         metadata.update(
             num_heads=args.num_heads,
             feedforward_dim=args.feedforward_dim,
             max_len=args.max_len,
-        )
-    if args.model == "graph_transformer":
-        metadata.update(
-            graph_layers=args.graph_layers,
-            num_joints=75,
-            coord_dim=4,
         )
     if args.augment:
         metadata["augmentation"] = {
