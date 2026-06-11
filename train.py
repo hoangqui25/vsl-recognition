@@ -76,12 +76,6 @@ def parse_args() -> argparse.Namespace:
     model.add_argument("--num-heads", type=int, default=8)
     model.add_argument("--feedforward-dim", type=int, default=1024)
     model.add_argument("--max-len", type=int, default=512)
-    model.add_argument(
-        "--position-encoding",
-        choices=("sinusoidal", "learned"),
-        default="sinusoidal",
-    )
-
     training = parser.add_argument_group("training")
     training.add_argument("--output-dir", type=Path, default=Path("checkpoints/run"))
     training.add_argument("--batch-size", type=int, default=64)
@@ -217,7 +211,6 @@ def build_model(args: argparse.Namespace, input_dim: int, num_classes: int) -> n
         "num_heads": args.num_heads,
         "feedforward_dim": args.feedforward_dim,
         "max_len": args.max_len,
-        "position_encoding": args.position_encoding,
     }
     return TransformerClassifier(
         **transformer_args,
@@ -267,7 +260,6 @@ def build_metadata(
             num_heads=args.num_heads,
             feedforward_dim=args.feedforward_dim,
             max_len=args.max_len,
-            position_encoding=args.position_encoding,
         )
     if args.augment:
         metadata["augmentation"] = {

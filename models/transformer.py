@@ -29,34 +29,6 @@ class SinusoidalPositionalEncoding(nn.Module):
         return features + self.pe[:, : features.size(1)]
 
 
-class LearnedPositionalEncoding(nn.Module):
-    """Trainable position information."""
-
-    def __init__(self, hidden_dim: int, max_len: int = 512) -> None:
-        super().__init__()
-        self.embedding = nn.Parameter(
-            torch.zeros(1, max_len, hidden_dim)
-        )
-        nn.init.trunc_normal_(self.embedding, std=0.02)
-
-    def forward(self, features: torch.Tensor) -> torch.Tensor:
-        return features + self.embedding[:, : features.size(1)]
-
-
-def build_positional_encoding(
-    encoding_type: str,
-    hidden_dim: int,
-    max_len: int,
-) -> nn.Module:
-    if encoding_type == "sinusoidal":
-        return SinusoidalPositionalEncoding(hidden_dim, max_len)
-    if encoding_type == "learned":
-        return LearnedPositionalEncoding(hidden_dim, max_len)
-    raise ValueError(
-        "position_encoding must be one of: sinusoidal, learned"
-    )
-
-
 def build_transformer_encoder(
     hidden_dim: int,
     num_heads: int,
@@ -120,7 +92,6 @@ class TransformerClassifier(nn.Module):
         dropout: float = 0.3,
         pooling: str = "mean",
         max_len: int = 512,
-        position_encoding: str = "sinusoidal",
     ) -> None:
         super().__init__()
         if pooling not in {"mean", "max", "cls"}:
@@ -134,8 +105,7 @@ class TransformerClassifier(nn.Module):
             nn.Linear(input_dim, hidden_dim),
         )
         self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_dim))
-        self.position = build_positional_encoding(
-            position_encoding,
+        self.position = SinusoidalPositionalEncoding(
             hidden_dim,
             max_len=max_len + 1,
         )

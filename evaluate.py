@@ -113,10 +113,6 @@ def build_model(metadata: dict[str, Any]) -> nn.Module:
                 metadata.get("feedforward_dim", int(metadata["hidden_dim"]) * 4)
             ),
             max_len=int(metadata.get("max_len", 512)),
-            position_encoding=metadata.get(
-                "position_encoding",
-                "sinusoidal",
-            ),
         )
     raise ValueError(f"Unsupported model in checkpoint: {model_name}")
 
