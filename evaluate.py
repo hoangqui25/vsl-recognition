@@ -21,7 +21,6 @@ from dataset import (
     validate_labels,
 )
 from models import (
-    DecoderTransformerClassifier,
     LSTMClassifier,
     RNNClassifier,
     TransformerClassifier,
@@ -113,24 +112,6 @@ def build_model(metadata: dict[str, Any]) -> nn.Module:
             feedforward_dim=int(
                 metadata.get("feedforward_dim", int(metadata["hidden_dim"]) * 4)
             ),
-            max_len=int(metadata.get("max_len", 512)),
-            position_encoding=metadata.get(
-                "position_encoding",
-                "sinusoidal",
-            ),
-        )
-    if model_name == "transformer_decoder":
-        return DecoderTransformerClassifier(
-            input_dim=int(metadata["input_dim"]),
-            num_classes=int(metadata["num_classes"]),
-            hidden_dim=int(metadata["hidden_dim"]),
-            num_layers=int(metadata["num_layers"]),
-            decoder_layers=int(metadata.get("decoder_layers", 2)),
-            num_heads=int(metadata.get("num_heads", 8)),
-            feedforward_dim=int(
-                metadata.get("feedforward_dim", int(metadata["hidden_dim"]) * 4)
-            ),
-            dropout=float(metadata["dropout"]),
             max_len=int(metadata.get("max_len", 512)),
             position_encoding=metadata.get(
                 "position_encoding",
