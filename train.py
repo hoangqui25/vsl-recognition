@@ -23,6 +23,7 @@ from dataset import (
     validate_labels,
 )
 from models import (
+    DecoderTransformerClassifier,
     LSTMClassifier,
     RNNClassifier,
     TransformerClassifier,
@@ -56,13 +57,13 @@ def parse_args() -> argparse.Namespace:
     model = parser.add_argument_group("model")
     model.add_argument(
         "--model",
-        choices=("rnn", "lstm", "transformer"),
+        choices=("rnn", "lstm", "transformer", "transformer_decoder"),
         default="lstm",
     )
     model.add_argument("--hidden-dim", type=int, default=256)
     model.add_argument("--num-layers", type=int, default=2)
     model.add_argument("--dropout", type=float, default=0.3)
-    model.add_argument("--pooling", choices=("last", "mean", "max", "cls"), default="mean")
+    model.add_argument("--pooling", choices=("last", "mean", "max", "cls"), default="cls")
     model.add_argument(
         "--bidirectional",
         action=argparse.BooleanOptionalAction,
@@ -75,7 +76,13 @@ def parse_args() -> argparse.Namespace:
     )
     model.add_argument("--num-heads", type=int, default=8)
     model.add_argument("--feedforward-dim", type=int, default=1024)
+    model.add_argument("--decoder-layers", type=int, default=2)
     model.add_argument("--max-len", type=int, default=512)
+    model.add_argument(
+        "--position-encoding",
+        choices=("sinusoidal", "learned"),
+        default="sinusoidal",
+    )
 
     training = parser.add_argument_group("training")
     training.add_argument("--output-dir", type=Path, default=Path("checkpoints/run"))
@@ -120,6 +127,8 @@ def prepare_args(args: argparse.Namespace) -> argparse.Namespace:
         raise ValueError(f"{args.model} does not support pooling='cls'")
     if args.model == "transformer" and args.pooling == "last":
         raise ValueError(f"{args.model} does not support pooling='last'")
+    if args.decoder_layers < 1:
+        raise ValueError("--decoder-layers must be positive")
     if not 0.0 < args.plateau_factor < 1.0:
         raise ValueError("--plateau-factor must be between 0 and 1")
     if args.plateau_patience < 0:
@@ -204,13 +213,24 @@ def build_model(args: argparse.Namespace, input_dim: int, num_classes: int) -> n
     if args.model == "lstm":
         return LSTMClassifier(**common, bidirectional=args.bidirectional)
     transformer_args = {
-        **common,
+        "input_dim": input_dim,
+        "num_classes": num_classes,
+        "hidden_dim": args.hidden_dim,
+        "num_layers": args.num_layers,
+        "dropout": args.dropout,
         "num_heads": args.num_heads,
         "feedforward_dim": args.feedforward_dim,
         "max_len": args.max_len,
+        "position_encoding": args.position_encoding,
     }
+    if args.model == "transformer_decoder":
+        return DecoderTransformerClassifier(
+            **transformer_args,
+            decoder_layers=args.decoder_layers,
+        )
     return TransformerClassifier(
         **transformer_args,
+        pooling=args.pooling,
     )
 
 
@@ -235,7 +255,11 @@ def build_metadata(
         "hidden_dim": args.hidden_dim,
         "num_layers": args.num_layers,
         "dropout": args.dropout,
-        "pooling": args.pooling,
+        "pooling": (
+            "class_query"
+            if args.model == "transformer_decoder"
+            else args.pooling
+        ),
         "augment": args.augment,
         "scheduler": args.scheduler,
         "label_to_idx": label_to_idx,
@@ -251,12 +275,15 @@ def build_metadata(
         metadata["bidirectional"] = args.bidirectional
     if args.model == "rnn":
         metadata["nonlinearity"] = args.rnn_nonlinearity
-    if args.model == "transformer":
+    if args.model in {"transformer", "transformer_decoder"}:
         metadata.update(
             num_heads=args.num_heads,
             feedforward_dim=args.feedforward_dim,
             max_len=args.max_len,
+            position_encoding=args.position_encoding,
         )
+    if args.model == "transformer_decoder":
+        metadata["decoder_layers"] = args.decoder_layers
     if args.augment:
         metadata["augmentation"] = {
             "prob": args.aug_prob,

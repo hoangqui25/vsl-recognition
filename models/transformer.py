@@ -1,25 +1,14 @@
 from __future__ import annotations
 
-import math
-
 import torch
 from torch import nn
 
-
-class SinusoidalPositionalEncoding(nn.Module):
-    def __init__(self, hidden_dim: int, max_len: int = 512) -> None:
-        super().__init__()
-        position = torch.arange(max_len).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, hidden_dim, 2) * (-math.log(10000.0) / hidden_dim)
-        )
-        pe = torch.zeros(max_len, hidden_dim)
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        self.register_buffer("pe", pe.unsqueeze(0), persistent=False)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x + self.pe[:, : x.size(1)]
+from .encoder import (
+    build_padding_mask,
+    build_positional_encoding,
+    build_transformer_encoder,
+    resolve_lengths,
+)
 
 
 class TransformerClassifier(nn.Module):
@@ -36,6 +25,7 @@ class TransformerClassifier(nn.Module):
         dropout: float = 0.3,
         pooling: str = "mean",
         max_len: int = 512,
+        position_encoding: str = "sinusoidal",
     ) -> None:
         super().__init__()
         if pooling not in {"mean", "max", "cls"}:
@@ -49,21 +39,18 @@ class TransformerClassifier(nn.Module):
             nn.Linear(input_dim, hidden_dim),
         )
         self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_dim))
-        self.position = SinusoidalPositionalEncoding(hidden_dim, max_len=max_len + 1)
-
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=hidden_dim,
-            nhead=num_heads,
-            dim_feedforward=feedforward_dim,
-            dropout=dropout,
-            activation="gelu",
-            batch_first=True,
-            norm_first=True,
+        self.position = build_positional_encoding(
+            position_encoding,
+            hidden_dim,
+            max_len=max_len + 1,
         )
-        self.encoder = nn.TransformerEncoder(
-            encoder_layer=encoder_layer,
+
+        self.encoder = build_transformer_encoder(
+            hidden_dim=hidden_dim,
+            num_heads=num_heads,
             num_layers=num_layers,
-            enable_nested_tensor=False,
+            feedforward_dim=feedforward_dim,
+            dropout=dropout,
         )
         self.classifier = nn.Sequential(
             nn.LayerNorm(hidden_dim),
@@ -72,33 +59,26 @@ class TransformerClassifier(nn.Module):
         )
         nn.init.trunc_normal_(self.cls_token, std=0.02)
 
-    def forward(self, features: torch.Tensor, lengths: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self,
+        features: torch.Tensor,
+        lengths: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         x = self.input_projection(features)
-
-        if lengths is None:
-            lengths = torch.full(
-                (x.size(0),),
-                x.size(1),
-                dtype=torch.long,
-                device=x.device,
-            )
-        else:
-            lengths = lengths.to(x.device)
+        lengths = resolve_lengths(lengths, x)
 
         cls = self.cls_token.expand(x.size(0), -1, -1)
         x = torch.cat([cls, x], dim=1)
         x = self.position(x)
 
-        padding_mask = self._padding_mask(lengths, x.size(1))
+        padding_mask = build_padding_mask(
+            lengths,
+            x.size(1),
+            prefix_tokens=1,
+        )
         encoded = self.encoder(x, src_key_padding_mask=padding_mask)
         pooled = self._pool(encoded, lengths, padding_mask)
         return self.classifier(pooled)
-
-    def _padding_mask(self, lengths: torch.Tensor, sequence_len: int) -> torch.Tensor:
-        positions = torch.arange(sequence_len, device=lengths.device).unsqueeze(0)
-        valid = positions <= lengths.unsqueeze(1)
-        valid[:, 0] = True
-        return ~valid
 
     def _pool(
         self,
