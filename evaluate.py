@@ -109,9 +109,6 @@ def build_model(metadata: dict[str, Any]) -> nn.Module:
         return TransformerClassifier(
             **common,
             num_heads=int(metadata.get("num_heads", 8)),
-            feedforward_dim=int(
-                metadata.get("feedforward_dim", int(metadata["hidden_dim"]) * 4)
-            ),
             max_len=int(metadata.get("max_len", 512)),
         )
     raise ValueError(f"Unsupported model in checkpoint: {model_name}")

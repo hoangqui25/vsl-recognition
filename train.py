@@ -74,7 +74,6 @@ def parse_args() -> argparse.Namespace:
         default="tanh",
     )
     model.add_argument("--num-heads", type=int, default=8)
-    model.add_argument("--feedforward-dim", type=int, default=1024)
     model.add_argument("--max-len", type=int, default=512)
     training = parser.add_argument_group("training")
     training.add_argument("--output-dir", type=Path, default=Path("checkpoints/run"))
@@ -209,7 +208,6 @@ def build_model(args: argparse.Namespace, input_dim: int, num_classes: int) -> n
         "num_layers": args.num_layers,
         "dropout": args.dropout,
         "num_heads": args.num_heads,
-        "feedforward_dim": args.feedforward_dim,
         "max_len": args.max_len,
     }
     return TransformerClassifier(
@@ -258,7 +256,7 @@ def build_metadata(
     if args.model == "transformer":
         metadata.update(
             num_heads=args.num_heads,
-            feedforward_dim=args.feedforward_dim,
+            feedforward_dim=args.hidden_dim * 4,
             max_len=args.max_len,
         )
     if args.augment:

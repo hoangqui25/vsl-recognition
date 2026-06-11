@@ -88,7 +88,6 @@ class TransformerClassifier(nn.Module):
         hidden_dim: int = 256,
         num_layers: int = 4,
         num_heads: int = 8,
-        feedforward_dim: int = 1024,
         dropout: float = 0.3,
         pooling: str = "mean",
         max_len: int = 512,
@@ -114,7 +113,7 @@ class TransformerClassifier(nn.Module):
             hidden_dim=hidden_dim,
             num_heads=num_heads,
             num_layers=num_layers,
-            feedforward_dim=feedforward_dim,
+            feedforward_dim=hidden_dim * 4,
             dropout=dropout,
         )
         self.classifier = nn.Sequential(
