@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("grid_search_config.json"),
+        default=Path("config/grid_search_config.json"),
         help="JSON file containing common and model-specific search spaces.",
     )
     parser.add_argument(

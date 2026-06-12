@@ -1,0 +1,31 @@
+{
+  "common": {
+    "batch_size": [128],
+    "dropout": [0.1, 0.2, 0.3, 0.4],
+    "lr": [0.001],
+    "scheduler": ["plateau"],
+    "augment": [true]
+  },
+  "rnn": {
+    "hidden_dim": [128, 256],
+    "num_layers": [2, 4],
+    "pooling": ["mean"],
+    "bidirectional": [true],
+    "rnn_nonlinearity": ["relu"],
+    "weight_decay": [0.0001]
+  },
+  "lstm": {
+    "hidden_dim": [128, 256],
+    "num_layers": [2, 4],
+    "pooling": ["mean"],
+    "bidirectional": [true],
+    "weight_decay": [0.0001]
+  },
+  "transformer": {
+    "hidden_dim": [128, 256],
+    "num_layers": [2, 4],
+    "num_heads": [8],
+    "pooling": ["cls"],
+    "weight_decay": [0.01]
+  }
+}
