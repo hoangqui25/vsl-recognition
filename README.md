@@ -37,8 +37,6 @@ python -c "import torch; print(torch.cuda.is_available())"
 ## Project Structure
 
 ```text
-data/                         Videos and metadata organized by split
-feature/                      .npy features and JSON manifests
 feature-extractor/            CNN and skeleton feature extraction
 dataset/                      Datasets, collation, and augmentation
 models/                       RNN, LSTM, and Transformer models
@@ -48,7 +46,6 @@ trainer.py                    Training loop, metrics, and checkpoints
 evaluate.py                   Checkpoint evaluation
 grid_search.py                Hyperparameter grid search
 validate_feature_dataset.py   Feature dataset validation
-train_commands.txt            Example commands
 ```
 
 A feature dataset follows this structure:
