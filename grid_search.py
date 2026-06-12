@@ -198,6 +198,15 @@ def read_history(run_dir: Path) -> list[dict[str, Any]]:
     return history
 
 
+def is_run_complete(run_dir: Path, epochs: int) -> bool:
+    """Return whether a run has finished the requested number of epochs."""
+    try:
+        history = read_history(run_dir)
+    except (json.JSONDecodeError, TypeError):
+        return False
+    return len(history) >= epochs and (run_dir / "last.pt").is_file()
+
+
 def best_epoch(
     history: list[dict[str, Any]],
     metric: str,
@@ -304,62 +313,78 @@ def main() -> None:
 
     print(
         f"grid_search models={','.join(args.models)} "
-        f"valid_runs={len(jobs)} metric={args.metric}",
+        f"valid_runs={len(jobs)} metric={args.metric} "
+        f"resume={'disabled' if args.force else 'enabled'}",
         flush=True,
     )
     results: list[dict[str, Any]] = []
 
-    for index, (run_id, model, parameters, run_dir, command) in enumerate(jobs, 1):
-        history = read_history(run_dir)
-        complete = len(history) >= args.epochs
-        if complete and not args.force:
-            print(f"[{index}/{len(jobs)}] skip completed {run_id}", flush=True)
-            results.append(
-                collect_result(
+    try:
+        for index, (run_id, model, parameters, run_dir, command) in enumerate(
+            jobs,
+            1,
+        ):
+            if is_run_complete(run_dir, args.epochs) and not args.force:
+                print(
+                    f"[{index}/{len(jobs)}] resume: skip completed {run_id}",
+                    flush=True,
+                )
+                results.append(
+                    collect_result(
+                        run_id,
+                        model,
+                        parameters,
+                        run_dir,
+                        args.metric,
+                        "completed",
+                    )
+                )
+                if not args.plan_only:
+                    save_results(args.output_dir, results, args.metric)
+                continue
+
+            print(f"\n[{index}/{len(jobs)}] {run_id}", flush=True)
+            print_command(command)
+            if args.plan_only:
+                continue
+
+            run_dir.mkdir(parents=True, exist_ok=True)
+            (run_dir / "grid_parameters.json").write_text(
+                json.dumps(parameters, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            process = subprocess.run(command, check=False)
+            status = "completed" if process.returncode == 0 else "failed"
+            error = "" if process.returncode == 0 else f"exit_code={process.returncode}"
+            try:
+                result = collect_result(
                     run_id,
                     model,
                     parameters,
                     run_dir,
                     args.metric,
-                    "skipped",
+                    status,
+                    error,
                 )
-            )
-            continue
-
-        print(f"\n[{index}/{len(jobs)}] {run_id}", flush=True)
-        print_command(command)
-        if args.plan_only:
-            continue
-
-        run_dir.mkdir(parents=True, exist_ok=True)
-        (run_dir / "grid_parameters.json").write_text(
-            json.dumps(parameters, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        process = subprocess.run(command, check=False)
-        status = "completed" if process.returncode == 0 else "failed"
-        error = "" if process.returncode == 0 else f"exit_code={process.returncode}"
-        try:
-            result = collect_result(
-                run_id,
-                model,
-                parameters,
-                run_dir,
-                args.metric,
-                status,
-                error,
-            )
-        except (KeyError, TypeError, json.JSONDecodeError) as exc:
-            result = {
-                "run_id": run_id,
-                "model": model,
-                "status": "failed",
-                "output_dir": str(run_dir),
-                **parameters,
-                "error": str(exc),
-            }
-        results.append(result)
+            except (KeyError, TypeError, json.JSONDecodeError) as exc:
+                result = {
+                    "run_id": run_id,
+                    "model": model,
+                    "status": "failed",
+                    "output_dir": str(run_dir),
+                    **parameters,
+                    "error": str(exc),
+                }
+            results.append(result)
+            save_results(args.output_dir, results, args.metric)
+    except KeyboardInterrupt:
         save_results(args.output_dir, results, args.metric)
+        print(
+            "\nGrid search interrupted. Run the same command again to resume "
+            "from the first unfinished configuration.",
+            flush=True,
+        )
+        return
 
     if not args.plan_only:
         save_results(args.output_dir, results, args.metric)

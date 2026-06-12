@@ -414,6 +414,27 @@ MODEL_<id>/
 `best.json` contains the best hyperparameter configuration according to the
 selected metric.
 
+### Resuming Grid Search
+
+Resume is enabled automatically. Run the same command again with the same
+configuration, number of epochs, and `--output-dir`. Configurations containing
+both `last.pt` and enough rows in `history.json` are skipped, and execution
+continues from the first unfinished configuration.
+
+```bash
+python grid_search.py \
+  --models lstm \
+  --config config/grid_search_config.json \
+  --epochs 60 \
+  --metric val_f1_macro \
+  --output-dir checkpoints/grid_search_lstm
+```
+
+If execution is interrupted with `Ctrl+C`, completed results are written before
+the process exits. An interrupted configuration is trained again from its
+first epoch on the next run; completed configurations are not repeated. Use
+`--force` only when every configuration should be trained again.
+
 ## Command-Line Reference
 
 ```bash
