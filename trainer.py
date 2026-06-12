@@ -244,7 +244,7 @@ class Trainer:
         curves = (
             ("Loss", "train_loss", "val_loss"),
             ("Accuracy", "train_accuracy", "val_accuracy"),
-            ("F1", "train_f1_macro", "val_f1_macro"),
+            ("F1 (macro)", "train_f1_macro", "val_f1_macro"),
         )
         figure, axes = plt.subplots(1, 3, figsize=(15, 4))
         for axis, (title, train_key, val_key) in zip(axes, curves):
