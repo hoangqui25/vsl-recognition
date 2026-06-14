@@ -115,7 +115,7 @@ vsl-recognition/
 │   ├── skeleton_feature_extraction.py  MediaPipe landmark extraction
 │   └── skeleton_feature_demo.py      Skeleton visualization
 ├── feature/
-│   └── skeleton_8/                   Generated skeleton features
+│   └── skeleton/                   Generated skeleton features
 ├── models/
 │   ├── mediapipe/
 │   │   └── holistic_landmarker.task  MediaPipe model asset
