@@ -56,10 +56,34 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--video-id", default="000000")
     parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("demo/skeleton"),
+        help="Directory for generated demo files. Default: demo/skeleton",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=None,
-        help="Output MP4 path. Default: demo/skeleton/<split>_<view>_<video_id>.mp4",
+        help="Optional MP4 path overriding --output-dir.",
+    )
+    parser.add_argument(
+        "--frames-output",
+        type=Path,
+        default=None,
+        help="Output image containing all sampled frames. Default: <output>_frames.png",
+    )
+    parser.add_argument(
+        "--frame-columns",
+        type=int,
+        default=4,
+        help="Number of columns in the sampled-frame image.",
+    )
+    parser.add_argument(
+        "--thumbnail-width",
+        type=int,
+        default=360,
+        help="Width of each frame in the sampled-frame image.",
     )
     parser.add_argument("--fps", type=float, default=2.0)
     parser.add_argument("--point-radius", type=int, default=3)
@@ -242,6 +266,71 @@ def save_video(frames: list[np.ndarray], output: Path, fps: float) -> None:
         writer.release()
 
 
+def save_frame_grid(
+    frames: list[np.ndarray],
+    output: Path,
+    columns: int,
+    thumbnail_width: int,
+) -> None:
+    if not frames:
+        raise ValueError("Cannot create a frame grid without frames")
+    if columns < 1:
+        raise ValueError("--frame-columns must be positive")
+    if thumbnail_width < 1:
+        raise ValueError("--thumbnail-width must be positive")
+
+    source_height, source_width = frames[0].shape[:2]
+    thumbnail_height = round(source_height * thumbnail_width / source_width)
+    label_height = 34
+    rows = (len(frames) + columns - 1) // columns
+    canvas = np.full(
+        (
+            rows * (thumbnail_height + label_height),
+            columns * thumbnail_width,
+            3,
+        ),
+        255,
+        dtype=np.uint8,
+    )
+
+    for index, frame in enumerate(frames):
+        row, column = divmod(index, columns)
+        x = column * thumbnail_width
+        y = row * (thumbnail_height + label_height)
+        thumbnail = cv2.resize(
+            frame,
+            (thumbnail_width, thumbnail_height),
+            interpolation=cv2.INTER_AREA,
+        )
+        canvas[y : y + thumbnail_height, x : x + thumbnail_width] = thumbnail
+        label = f"Frame {index + 1}"
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.65
+        thickness = 1
+        (text_width, text_height), _ = cv2.getTextSize(
+            label,
+            font,
+            font_scale,
+            thickness,
+        )
+        text_x = x + (thumbnail_width - text_width) // 2
+        text_y = y + thumbnail_height + (label_height + text_height) // 2
+        cv2.putText(
+            canvas,
+            label,
+            (text_x, text_y),
+            font,
+            font_scale,
+            (20, 20, 20),
+            thickness,
+            cv2.LINE_AA,
+        )
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if not cv2.imwrite(str(output), canvas):
+        raise RuntimeError(f"Could not save sampled-frame image: {output}")
+
+
 def print_statistics(skeleton: np.ndarray) -> None:
     pose = skeleton[:, :POSE_COUNT]
     left = skeleton[:, POSE_COUNT : POSE_COUNT + HAND_COUNT]
@@ -261,8 +350,11 @@ def main() -> None:
     source_feature = feature_path(args)
     source_video = video_path(args)
     output = args.output or (
-        Path("demo/skeleton")
+        args.output_dir
         / f"{args.split}_{args.view}_{args.video_id}.mp4"
+    )
+    frames_output = args.frames_output or output.with_name(
+        f"{output.stem}_frames.png"
     )
 
     skeleton = load_skeleton(source_feature)
@@ -272,11 +364,18 @@ def main() -> None:
         for frame, frame_skeleton in zip(frames, skeleton)
     ]
     save_video(rendered, output, args.fps)
+    save_frame_grid(
+        rendered,
+        frames_output,
+        columns=args.frame_columns,
+        thumbnail_width=args.thumbnail_width,
+    )
 
     print_statistics(skeleton)
     print(f"video: {source_video}")
     print(f"feature: {source_feature}")
     print(f"output: {output}")
+    print(f"frames: {frames_output}")
 
 
 if __name__ == "__main__":
