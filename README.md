@@ -34,16 +34,80 @@ Check CUDA availability:
 python -c "import torch; print(torch.cuda.is_available())"
 ```
 
+## MediaPipe Model Setup
+
+Skeleton extraction uses the MediaPipe Tasks Holistic Landmarker model. Obtain
+the `holistic_landmarker.task` model asset from the official MediaPipe model
+resources and place it at:
+
+```text
+models/
+  mediapipe/
+    holistic_landmarker.task
+```
+
+Download the model asset directly with `curl`:
+
+```bash
+mkdir -p models/mediapipe
+curl -L \
+  "https://storage.googleapis.com/mediapipe-models/holistic_landmarker/holistic_landmarker/float16/latest/holistic_landmarker.task" \
+  -o models/mediapipe/holistic_landmarker.task
+```
+
+Verify that the file was downloaded:
+
+```bash
+ls -lh models/mediapipe/holistic_landmarker.task
+```
+
+The model asset is used only to extract landmarks. It is different from the
+RNN, LSTM, and Transformer checkpoints produced during training.
+
+Extract eight uniformly sampled skeleton frames from the first five splits:
+
+```bash
+python feature-extractor/skeleton_feature_extraction.py \
+  --data-root data \
+  --out-root feature/skeleton_8 \
+  --splits split_1 split_2 split_3 split_4 split_5 \
+  --views all \
+  --num-frames 8 \
+  --api tasks \
+  --model-asset-path models/mediapipe/holistic_landmarker.task
+```
+
+The output of each video has shape `(8, 300)`, where each frame contains 33
+pose landmarks, 21 left-hand landmarks, and 21 right-hand landmarks. Each
+landmark is represented by `(x, y, z, visibility_or_presence)`.
+
+If the model is stored elsewhere, pass its location explicitly:
+
+```bash
+--model-asset-path /path/to/holistic_landmarker.task
+```
+
+The same option is available during video inference:
+
+```bash
+python inference.py \
+  --video path/to/video.mp4 \
+  --checkpoint path/to/best.pt \
+  --model-asset-path models/mediapipe/holistic_landmarker.task
+```
+
 ## Project Structure
 
 ```text
 feature-extractor/            CNN and skeleton feature extraction
 dataset/                      Datasets, collation, and augmentation
 models/                       RNN, LSTM, and Transformer models
+models/mediapipe/             MediaPipe task model assets
 config/grid_search_config.json
 train.py                      Training and validation entry point
 trainer.py                    Training loop, metrics, and checkpoints
 evaluate.py                   Checkpoint evaluation
+inference.py                  Prediction from an input video
 grid_search.py                Hyperparameter grid search
 validate_feature_dataset.py   Feature dataset validation
 ```
