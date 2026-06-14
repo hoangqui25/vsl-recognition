@@ -99,30 +99,57 @@ python inference.py \
 ## Project Structure
 
 ```text
-feature-extractor/            CNN and skeleton feature extraction
-dataset/                      Datasets, collation, and augmentation
-models/                       RNN, LSTM, and Transformer models
-models/mediapipe/             MediaPipe task model assets
-config/grid_search_config.json
-train.py                      Training and validation entry point
-trainer.py                    Training loop, metrics, and checkpoints
-evaluate.py                   Checkpoint evaluation
-inference.py                  Prediction from an input video
-grid_search.py                Hyperparameter grid search
-validate_feature_dataset.py   Feature dataset validation
+vsl-recognition/
+├── config/
+│   └── grid_search_config.json       Grid-search parameter space
+├── data/
+│   └── split_*/                      Original videos and split manifests
+├── dataset/
+│   ├── augmentations.py              Skeleton and CNN augmentation
+│   ├── base.py                       Shared feature dataset
+│   ├── cnn.py                        CNN feature dataset
+│   ├── skeleton.py                   Skeleton feature dataset
+│   └── utils.py                      Manifest and view utilities
+├── feature-extractor/
+│   ├── cnn_feature_extraction.py     CNN feature extraction
+│   ├── skeleton_feature_extraction.py  MediaPipe landmark extraction
+│   └── skeleton_feature_demo.py      Skeleton visualization
+├── feature/
+│   ├── cnn/                          Generated CNN features
+│   └── skeleton_8/                   Generated 8-frame skeleton features
+├── models/
+│   ├── mediapipe/
+│   │   └── holistic_landmarker.task  MediaPipe model asset
+│   ├── lstm.py                       LSTM classifier
+│   ├── rnn.py                        RNN classifier
+│   └── transformer.py                Transformer classifier
+├── checkpoints/                      Training and evaluation outputs
+├── train.py                          Training entry point
+├── trainer.py                        Training loop, metrics, and checkpoints
+├── evaluate.py                       Single-checkpoint evaluation
+├── evaluate_best_models.py           Best-model evaluation
+├── inference.py                      Prediction from an input video
+├── grid_search.py                    Hyperparameter grid search
+├── validate_feature_dataset.py       Feature dataset validation
+├── model_parameters.py               Model parameter inspection
+├── requirements.txt                  Python dependencies
+└── README.md                         Project documentation
 ```
 
 A feature dataset follows this structure:
 
 ```text
 feature/skeleton_8/
-  split_1/
-    front_view.json
-    left_view.json
-    right_view.json
-    front_view/*.npy
-    left_view/*.npy
-    right_view/*.npy
+└── split_1/
+    ├── front_view.json
+    ├── left_view.json
+    ├── right_view.json
+    ├── front_view/
+    │   └── *.npy
+    ├── left_view/
+    │   └── *.npy
+    └── right_view/
+        └── *.npy
 ```
 
 Each `.npy` file contains a sequence with shape `(frames, feature_dim)`.
