@@ -115,8 +115,7 @@ vsl-recognition/
 │   ├── skeleton_feature_extraction.py  MediaPipe landmark extraction
 │   └── skeleton_feature_demo.py      Skeleton visualization
 ├── feature/
-│   ├── cnn/                          Generated CNN features
-│   └── skeleton_8/                   Generated 8-frame skeleton features
+│   └── skeleton_8/                   Generated skeleton features
 ├── models/
 │   ├── mediapipe/
 │   │   └── holistic_landmarker.task  MediaPipe model asset
@@ -139,7 +138,7 @@ vsl-recognition/
 A feature dataset follows this structure:
 
 ```text
-feature/skeleton_8/
+feature/skeleton/
 └── split_1/
     ├── front_view.json
     ├── left_view.json
