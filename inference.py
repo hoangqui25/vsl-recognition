@@ -15,7 +15,7 @@ from evaluate import build_model, load_checkpoint, resolve_device
 
 
 EXTRACTOR_PATH = Path("feature-extractor/skeleton_feature_extraction.py")
-DEFAULT_MEDIAPIPE_MODEL = Path("app/mediapipe/holistic_landmarker.task")
+DEFAULT_MEDIAPIPE_MODEL = Path("models/mediapipe/holistic_landmarker.task")
 
 
 def parse_args() -> argparse.Namespace:
