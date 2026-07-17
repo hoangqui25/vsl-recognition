@@ -7,3 +7,5 @@ torchvision
 tqdm
 mediapipe
 matplotlib
+Flask
+gunicorn
