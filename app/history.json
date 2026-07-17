@@ -1,5 +1,11 @@
 [
     {
+        "time": "17/07/2026 22:10",
+        "video": "D0034.mp4",
+        "result": "Chú",
+        "confidence": 38.64
+    },
+    {
         "time": "17/07/2026 22:03",
         "video": "W03990.mp4",
         "result": "Xin lỗi",
@@ -112,11 +118,5 @@
         "video": "W00096.mp4",
         "result": "Tháng một",
         "confidence": 46.5
-    },
-    {
-        "time": "17/07/2026 17:00",
-        "video": "D0151B.mp4",
-        "result": "Sai",
-        "confidence": 40.74
     }
 ]
