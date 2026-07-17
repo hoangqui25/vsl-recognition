@@ -62,7 +62,7 @@ def predict_video(video_path):
     )
 
     model_asset_path = Path(
-        "models/mediapipe/holistic_landmarker.task"
+        "app/mediapipe/holistic_landmarker.task"
     )
 
     num_frames = 8
