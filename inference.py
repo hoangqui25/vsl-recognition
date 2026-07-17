@@ -187,10 +187,6 @@ def predict(
     ]
     return predictions, metadata
 
-# =====================================
-# Flask API Function
-# =====================================
-
 def predict_video(video_path):
     """
     Predict one video for Flask application
@@ -212,7 +208,7 @@ def predict_video(video_path):
         "app/checkpoints/best.pt"
     )
     model_asset_path = Path(
-        "app/mediapipe/holistic_landmarker.task"
+        "models/mediapipe/holistic_landmarker.task"
     )
     num_frames = 8
     # ==========================
