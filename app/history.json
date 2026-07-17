@@ -1,0 +1,122 @@
+[
+    {
+        "time": "17/07/2026 22:03",
+        "video": "W03990.mp4",
+        "result": "Xin lỗi",
+        "confidence": 66.03
+    },
+    {
+        "time": "17/07/2026 22:03",
+        "video": "D0003.mp4",
+        "result": "Lễ tân",
+        "confidence": 99.19
+    },
+    {
+        "time": "17/07/2026 21:35",
+        "video": "D0002.mp4",
+        "result": "Tỉnh",
+        "confidence": 89.42
+    },
+    {
+        "time": "17/07/2026 20:39",
+        "video": "W00369T.mp4",
+        "result": "Buổi tối",
+        "confidence": 66.04
+    },
+    {
+        "time": "17/07/2026 20:30",
+        "video": "D0003.mp4",
+        "result": "Lễ tân",
+        "confidence": 99.19
+    },
+    {
+        "time": "17/07/2026 17:29",
+        "video": "W01208.mp4",
+        "result": "Tốt bụng",
+        "confidence": 54.04
+    },
+    {
+        "time": "17/07/2026 17:27",
+        "video": "W02329B.mp4",
+        "result": "Ấm",
+        "confidence": 48.36
+    },
+    {
+        "time": "17/07/2026 17:27",
+        "video": "W02337B.mp4",
+        "result": "Ngày Quốc tế Lao động",
+        "confidence": 99.8
+    },
+    {
+        "time": "17/07/2026 17:27",
+        "video": "W02337B.mp4",
+        "result": "Ngày Quốc tế Lao động",
+        "confidence": 99.8
+    },
+    {
+        "time": "17/07/2026 17:26",
+        "video": "W02337B.mp4",
+        "result": "Ngày Quốc tế Lao động",
+        "confidence": 99.8
+    },
+    {
+        "time": "17/07/2026 17:21",
+        "video": "W01928.mp4",
+        "result": "Năm",
+        "confidence": 35.67
+    },
+    {
+        "time": "17/07/2026 17:21",
+        "video": "W01190.mp4",
+        "result": "Giám đốc",
+        "confidence": 52.87
+    },
+    {
+        "time": "17/07/2026 17:17",
+        "video": "W01190.mp4",
+        "result": "Giám đốc",
+        "confidence": 52.87
+    },
+    {
+        "time": "17/07/2026 17:17",
+        "video": "W03990.mp4",
+        "result": "Xin lỗi",
+        "confidence": 66.03
+    },
+    {
+        "time": "17/07/2026 17:14",
+        "video": "W00042.mp4",
+        "result": "Chú ý",
+        "confidence": 33.5
+    },
+    {
+        "time": "17/07/2026 17:14",
+        "video": "D0444.mp4",
+        "result": "Nhân viên văn phòng",
+        "confidence": 90.78
+    },
+    {
+        "time": "17/07/2026 17:12",
+        "video": "W03990.mp4",
+        "result": "Xin lỗi",
+        "confidence": 66.03
+    },
+    {
+        "time": "17/07/2026 17:08",
+        "video": "W00279.mp4",
+        "result": "Bình minh",
+        "confidence": 99.99
+    },
+    {
+        "time": "17/07/2026 17:02",
+        "video": "W00096.mp4",
+        "result": "Tháng một",
+        "confidence": 46.5
+    },
+    {
+        "time": "17/07/2026 17:00",
+        "video": "D0151B.mp4",
+        "result": "Sai",
+        "confidence": 40.74
+    }
+]
