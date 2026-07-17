@@ -13,9 +13,10 @@ import torch
 
 from evaluate import build_model, load_checkpoint, resolve_device
 
-BASE_DIR = Path(__file__).resolve().parent
-EXTRACTOR_PATH = BASE_DIR / "feature-extractor" / "skeleton_feature_extraction.py"
-DEFAULT_MEDIAPIPE_MODEL = BASE_DIR / "models" / "mediapipe" / "holistic_landmarker.task"
+
+EXTRACTOR_PATH = Path("feature-extractor/skeleton_feature_extraction.py")
+DEFAULT_MEDIAPIPE_MODEL = Path("app/mediapipe/holistic_landmarker.task")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -208,10 +209,10 @@ def predict_video(video_path):
     # Config
     # ==========================
     checkpoint_path = Path(
-        "checkpoints/best.pt"
+        "app/checkpoints/best.pt"
     )
     model_asset_path = Path(
-        "models/mediapipe/holistic_landmarker.task"
+        "app/mediapipe/holistic_landmarker.task"
     )
     num_frames = 8
     # ==========================

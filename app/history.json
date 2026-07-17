@@ -1,5 +1,11 @@
 [
     {
+        "time": "17/07/2026 22:51",
+        "video": "D0003.mp4",
+        "result": "Lễ tân",
+        "confidence": 99.19
+    },
+    {
         "time": "17/07/2026 22:10",
         "video": "D0034.mp4",
         "result": "Chú",
@@ -112,11 +118,5 @@
         "video": "W00279.mp4",
         "result": "Bình minh",
         "confidence": 99.99
-    },
-    {
-        "time": "17/07/2026 17:02",
-        "video": "W00096.mp4",
-        "result": "Tháng một",
-        "confidence": 46.5
     }
 ]
