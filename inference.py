@@ -7,17 +7,15 @@ import sys
 from pathlib import Path
 from types import ModuleType
 from typing import Any
-import os
 
 import numpy as np
 import torch
 
 from evaluate import build_model, load_checkpoint, resolve_device
 
-
-EXTRACTOR_PATH = Path("feature-extractor/skeleton_feature_extraction.py")
-DEFAULT_MEDIAPIPE_MODEL = Path("models/mediapipe/holistic_landmarker.task")
-
+BASE_DIR = Path(__file__).resolve().parent
+EXTRACTOR_PATH = BASE_DIR / "feature-extractor" / "skeleton_feature_extraction.py"
+DEFAULT_MEDIAPIPE_MODEL = BASE_DIR / "models" / "mediapipe" / "holistic_landmarker.task"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -277,51 +275,6 @@ def predict_video(video_path):
         skeleton_result
     }
     return result
-
-import os
-
-
-def predict_folder(folder_path):
-
-    results = []
-
-
-    for filename in os.listdir(folder_path):
-
-        if filename.endswith(
-            (".mp4", ".avi", ".mov")
-        ):
-
-            video_path = os.path.join(
-                folder_path,
-                filename
-            )
-
-
-            print(
-                "Processing:",
-                filename
-            )
-
-
-            result = predict_video(
-                video_path
-            )
-
-
-            results.append({
-
-                "video": filename,
-
-                "gloss": result["gloss"],
-
-                "confidence":
-                result["confidence"]
-
-            })
-
-
-    return results
 
 def main() -> None:
     args = parse_args()

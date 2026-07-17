@@ -1,29 +1,30 @@
 from flask import Flask, render_template, request, send_from_directory
-
+import sys
 import os
 import json
-
+from inference import predict_video
+from flask import Flask
 from datetime import datetime
+app = Flask(
+    __name__,
+    template_folder="app/templates",
+    static_folder="app/static"
+)
 
-from inference import predict_video, predict_folder
-
-app = Flask(__name__)
-
-
+now = datetime.now()
 # =========================
 # CONFIG
 # =========================
-VIDEO_FOLDER = "uploads"
-UPLOAD_FOLDER = "uploads"
-HISTORY_FILE = "history.json"
+VIDEO_FOLDER = "app/uploads"
+HISTORY_FILE = "app/history.json"
 
 
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["UPLOAD_FOLDER"] = VIDEO_FOLDER
 
 
 # tạo folder upload
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(VIDEO_FOLDER, exist_ok=True)
 
 
 # =========================
@@ -34,25 +35,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
 
-    return send_from_directory(UPLOAD_FOLDER, filename)
+    return send_from_directory(VIDEO_FOLDER, filename)
 
 
 # =========================
 # HISTORY
-# =========================
-@app.route("/batch")
-def batch():
-
-    results = predict_folder(
-        VIDEO_FOLDER
-    )
-
-
-    return render_template(
-        "batch.html",
-        results=results
-    )
-
 def load_history():
 
     if not os.path.exists(HISTORY_FILE):
@@ -124,7 +111,7 @@ def predict():
 
     filename = video.filename
 
-    save_path = os.path.join(UPLOAD_FOLDER, filename)
+    save_path = os.path.join(VIDEO_FOLDER, filename)
 
     video.save(save_path)
 
@@ -182,61 +169,6 @@ def predict():
         </pre>
 
         """
-
-
-# ==========================
-# Predict all videos in uploads
-# ==========================
-
-
-@app.route("/predict_all")
-def predict_all():
-
-    results = []
-
-    # lấy tất cả video trong uploads
-    videos = [
-        f
-        for f in os.listdir(UPLOAD_FOLDER)
-        if f.lower().endswith((".mp4", ".avi", ".mov", ".mkv"))
-    ]
-
-    if len(videos) == 0:
-        return "No videos found in uploads"
-
-    for video_name in videos:
-
-        video_path = os.path.join(UPLOAD_FOLDER, video_name)
-
-        try:
-
-            print(f"Processing {video_name}...")
-
-            result = predict_video(video_path)
-
-            item = {
-                "time": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                "video": video_name,
-                "result": result["gloss"],
-                "confidence": result["confidence"],
-            }
-
-            save_history(item)
-
-            results.append(
-                {
-                    "video": video_name,
-                    "gloss": result["gloss"],
-                    "confidence": result["confidence"],
-                }
-            )
-
-        except Exception as e:
-
-            results.append({"video": video_name, "error": str(e)})
-
-    return render_template("batch.html", results=results)
-
 
 if __name__ == "__main__":
 
