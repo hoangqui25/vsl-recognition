@@ -1,17 +1,10 @@
-# Flask Web App
-Flask
-Werkzeug
-
-# Video processing
-opencv-python
+# Minimal dependencies for feature extraction and model training scripts.
+# Use Python 3.10 or 3.11. Python 3.14 is too new for many ML wheels.
 numpy
-
-# AI inference
+opencv-python
 torch
 torchvision
-
-# Skeleton extraction
-mediapipe
-
-# Utilities
 tqdm
+mediapipe
+matplotlib
+Flask
