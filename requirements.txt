@@ -1,9 +1,17 @@
-# Minimal dependencies for feature extraction and model training scripts.
-# Use Python 3.10 or 3.11. Python 3.14 is too new for many ML wheels.
-numpy
+# Flask Web App
+Flask
+Werkzeug
+
+# Video processing
 opencv-python
+numpy
+
+# AI inference
 torch
 torchvision
-tqdm
+
+# Skeleton extraction
 mediapipe
-matplotlib
+
+# Utilities
+tqdm

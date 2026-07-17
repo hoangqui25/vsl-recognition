@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from types import ModuleType
 from typing import Any
+import os
 
 import numpy as np
 import torch
@@ -187,6 +188,140 @@ def predict(
     ]
     return predictions, metadata
 
+# =====================================
+# Flask API Function
+# =====================================
+
+def predict_video(video_path):
+    """
+    Predict one video for Flask application
+
+    Return:
+    {
+        gloss,
+        confidence,
+        top5,
+        skeleton
+    }
+    """
+    from pathlib import Path
+    video_path = Path(video_path)
+    # ==========================
+    # Config
+    # ==========================
+    checkpoint_path = Path(
+        "checkpoints/best.pt"
+    )
+    model_asset_path = Path(
+        "models/mediapipe/holistic_landmarker.task"
+    )
+    num_frames = 8
+    # ==========================
+    # Device
+    # ==========================
+    device = resolve_device("auto")
+    # ==========================
+    # Extract skeleton
+    # ==========================
+    features = extract_skeleton(
+        video_path=video_path,
+        model_asset_path=model_asset_path,
+        num_frames=num_frames
+    )
+    predictions, metadata = predict(
+        checkpoint_path=checkpoint_path,
+        features=features,
+        device=device,
+        top_k=5
+    )
+    stats = detection_statistics(features)
+    skeleton_result = {
+        "pose":
+        round(
+            stats["pose_detected_ratio"] * 100,
+            2
+        ),
+        "left_hand":
+        round(
+            stats["left_hand_detected_ratio"] * 100,
+            2
+        ),
+        "right_hand":
+        round(
+            stats["right_hand_detected_ratio"] * 100,
+            2
+        )
+    }
+    top5 = []
+    for item in predictions:
+        top5.append({
+            "label":
+            item["label"],
+            "confidence":
+            round(
+                item["confidence"] * 100,
+                2
+            )
+        })
+    result = {
+        "gloss":
+        predictions[0]["label"],
+        "confidence":
+        round(
+            predictions[0]["confidence"] * 100,
+            2
+        ),
+        "top5":
+        top5,
+        "skeleton":
+        skeleton_result
+    }
+    return result
+
+import os
+
+
+def predict_folder(folder_path):
+
+    results = []
+
+
+    for filename in os.listdir(folder_path):
+
+        if filename.endswith(
+            (".mp4", ".avi", ".mov")
+        ):
+
+            video_path = os.path.join(
+                folder_path,
+                filename
+            )
+
+
+            print(
+                "Processing:",
+                filename
+            )
+
+
+            result = predict_video(
+                video_path
+            )
+
+
+            results.append({
+
+                "video": filename,
+
+                "gloss": result["gloss"],
+
+                "confidence":
+                result["confidence"]
+
+            })
+
+
+    return results
 
 def main() -> None:
     args = parse_args()
