@@ -14,7 +14,7 @@ app = Flask(__name__)
 # CONFIG
 # =========================
 VIDEO_FOLDER = "uploads"
-UPLOAD_FOLDER = "uploads//Dataset//Videos"
+UPLOAD_FOLDER = "uploads"
 HISTORY_FILE = "history.json"
 
 
